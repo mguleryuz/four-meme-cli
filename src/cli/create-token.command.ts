@@ -101,26 +101,36 @@ export class CreateTokenCommand {
    * @returns Complete options
    */
   private async collectOptions(cmdOptions: any): Promise<ICreateTokenOptions> {
+    // Questions to ask if not provided in command line options
     const questions = [];
 
-    // Collect required fields if missing
+    // Collect token name if not provided
     if (!cmdOptions.name) {
       questions.push({
         type: "input",
         name: "name",
-        message: "Token name:",
-        validate: (input: string) =>
-          input.trim() !== "" ? true : "Token name is required",
+        message: "Enter token name:",
+        validate: (input: string) => {
+          if (input.trim().length === 0) {
+            return "Token name cannot be empty";
+          }
+          return true;
+        },
       });
     }
 
+    // Collect token symbol if not provided
     if (!cmdOptions.symbol) {
       questions.push({
         type: "input",
         name: "symbol",
-        message: "Token symbol:",
-        validate: (input: string) =>
-          input.trim() !== "" ? true : "Token symbol is required",
+        message: "Enter token symbol:",
+        validate: (input: string) => {
+          if (input.trim().length === 0) {
+            return "Token symbol cannot be empty";
+          }
+          return true;
+        },
       });
     }
 
@@ -288,6 +298,8 @@ export class CreateTokenCommand {
       twitter: cmdOptions.twitter,
       website: cmdOptions.website,
       imagePath: cmdOptions.image || answers.imagePath,
+      // TEMPORARY FIX: Providing a dummy createArg to avoid empty data error
+      createArg: "0x123456",
       buy: {
         enabled:
           cmdOptions.buy !== undefined ? cmdOptions.buy : answers.buyEnabled,

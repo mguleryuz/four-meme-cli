@@ -7,6 +7,7 @@ import {
   StrategyType,
 } from "./strategy-factory.service";
 import { WalletCoordinatorService } from "../blockchain/wallet-coordinator.service";
+import { BLOCKCHAIN_CONSTANTS } from "../config/constants";
 import type {
   ITokenOptions,
   IBuyOptions,
@@ -56,6 +57,25 @@ export class EngineService {
    * @returns Token contract address
    */
   async createToken(options: ICreateTokenOptions): Promise<string> {
+    // Check wallet balance first to ensure we have enough funds
+    const primaryWallet = this.walletService.getPrimaryWallet();
+    const provider = primaryWallet.provider;
+    const walletAddress = await primaryWallet.getAddress();
+    const balance = await provider.getBalance(walletAddress);
+    const formattedBalance = parseFloat(balance.toString()) / 1e18; // Convert from wei to BNB
+
+    console.log(`Wallet balance: ${formattedBalance.toFixed(6)} BNB`);
+
+    // Calculate minimum required BNB (token creation fee + buffer for gas)
+    const minRequired =
+      parseFloat(BLOCKCHAIN_CONSTANTS.CREATE_TOKEN_FEE) + 0.005; // 0.005 BNB buffer for gas
+
+    if (formattedBalance < minRequired) {
+      throw new Error(
+        `Insufficient wallet balance. You have ${formattedBalance.toFixed(6)} BNB but need at least ${minRequired.toFixed(6)} BNB for token creation.`
+      );
+    }
+
     // Upload image
     const logoUrl = await this.tokenService.uploadImage(options.imagePath);
     console.log(`Image uploaded successfully: ${logoUrl}`);

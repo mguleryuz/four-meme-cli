@@ -83,8 +83,10 @@ export class BundleLaunchStrategy implements ILaunchStrategy {
       // 1. Create the token contract transaction
       const createTokenTx: TransactionRequest = {
         to: envConfig.factoryAddress,
-        data: tokenOptions.createArg, // This should contain the encoded function call
-        value: parseEther(BLOCKCHAIN_CONSTANTS.CREATE_TOKEN_FEE),
+        data: tokenOptions.createArg || "", // This should contain the encoded function call
+        value: BigInt(
+          Math.floor(parseFloat(BLOCKCHAIN_CONSTANTS.CREATE_TOKEN_FEE) * 1e18)
+        ),
       };
 
       // Update status
@@ -139,10 +141,14 @@ export class BundleLaunchStrategy implements ILaunchStrategy {
 
       for (const address of walletAddresses) {
         const walletInfo = this.walletCoordinator.getWalletInfo(address);
-        if (walletInfo && walletInfo.isActive) {
+        if (walletInfo && walletInfo.isActive && tokenOptions.buy) {
           purchaseTxs.push({
             to: tokenAddress,
-            value: parseEther(tokenOptions.buy.buyAmount),
+            value: BigInt(
+              Math.floor(
+                parseFloat(tokenOptions.buy.buyAmount || "0.001") * 1e18
+              )
+            ),
           });
           purchaseWalletAddresses.push(address);
         }

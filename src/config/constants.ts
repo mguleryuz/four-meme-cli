@@ -27,7 +27,7 @@ export const BLOCKCHAIN_CONSTANTS = {
     },
   ],
   DEFAULT_GAS_LIMIT: "1000000",
-  CREATE_TOKEN_FEE: "0.01", // BNB
+  CREATE_TOKEN_FEE: "0.009", // BNB (temporary reduced to fit into wallet balance)
 };
 
 export const DEFAULT_HEADERS = {

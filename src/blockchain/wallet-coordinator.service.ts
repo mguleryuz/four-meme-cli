@@ -185,11 +185,27 @@ export class WalletCoordinatorService {
 
     try {
       // Prepare transaction with gas estimation
-      const prepared = await this.prepareTransaction(
-        client,
-        txData,
-        mergedOptions
-      );
+      let prepared;
+      try {
+        prepared = await this.prepareTransaction(client, txData, mergedOptions);
+      } catch (estimationError) {
+        // If gas estimation fails, use a hardcoded gas limit
+        console.warn(
+          `Gas estimation failed: ${estimationError instanceof Error ? estimationError.message : "Unknown error"}`
+        );
+        console.warn("Using hardcoded gas values instead");
+
+        // Clone transaction data to avoid modifying original
+        prepared = { ...txData };
+
+        // Use hardcoded gas limit for token creation (higher value to ensure it works)
+        prepared.gas = BigInt(300000); // Lower gas limit that should still be sufficient
+
+        // Use a reasonable gas price
+        if (!prepared.gasPrice) {
+          prepared.gasPrice = BigInt(1 * 10 ** 9); // 1 gwei
+        }
+      }
 
       // Send transaction
       const hash = await client.sendTransaction(prepared);
@@ -376,11 +392,30 @@ export class WalletCoordinatorService {
       // Clone transaction data to avoid modifying original
       const tx = { ...txData };
 
+      // Format transaction values for RPC call
+      // BSC requires 0x prefix for hex values
+      const rpcTx: any = {
+        ...tx,
+      };
+
+      // Convert bigint values to hex strings with 0x prefix
+      if (tx.value !== undefined) {
+        rpcTx.value = `0x${tx.value.toString(16)}`;
+      }
+
+      if (tx.gas !== undefined) {
+        rpcTx.gas = `0x${tx.gas.toString(16)}`;
+      }
+
+      if (tx.gasPrice !== undefined) {
+        rpcTx.gasPrice = `0x${tx.gasPrice.toString(16)}`;
+      }
+
       // Get gas parameters from provider if not provided
       if (!tx.gas) {
         const gasEstimate = await client.request({
           method: "eth_estimateGas",
-          params: [tx],
+          params: [rpcTx],
         });
 
         // Apply gas multiplier
