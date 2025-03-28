@@ -7,6 +7,7 @@ import type {
   ITokenCreateRequest,
   ITokenCreateResponse,
   ITokenUploadResponse,
+  ITokenDetailsResponse,
   IApiHeaders,
 } from "../types";
 import { AuthService } from "./auth.service";
@@ -95,6 +96,42 @@ export class TokenService {
         throw new Error(`Token creation failed: ${error.message}`);
       }
       throw new Error("Token creation failed with unknown error");
+    }
+  }
+
+  /**
+   * Get token details from Four.meme API
+   * @param tokenId Token ID to get details for
+   * @returns Token details including contract address
+   */
+  async getTokenDetails(
+    tokenId: string
+  ): Promise<{ tokenId: string; tokenAddress?: string }> {
+    if (!this.authService.getAccessToken()) {
+      throw new Error("Not authenticated. Please login first.");
+    }
+
+    try {
+      // Construct the token details URL with the tokenId
+      const url = `${API_ENDPOINTS.TOKEN_DETAILS}/${tokenId}`;
+
+      const response = await axios.get<ITokenDetailsResponse>(url, {
+        headers: this.authService.getHeaders(),
+      });
+
+      if (response.data.code !== 0) {
+        throw new Error(`Failed to get token details: ${response.data.msg}`);
+      }
+
+      return {
+        tokenId: response.data.data.tokenId,
+        tokenAddress: response.data.data.contractAddress,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get token details: ${error.message}`);
+      }
+      throw new Error("Failed to get token details with unknown error");
     }
   }
 }

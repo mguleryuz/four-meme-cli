@@ -15,6 +15,7 @@ import type {
   ILaunchStrategy,
   IStrategyConfig,
   IStrategyOptionsConfig,
+  IStrategyOptions,
 } from "../types";
 
 /**
@@ -95,15 +96,35 @@ export class EngineService {
 
     console.log(`Token contract deployed at: ${tokenAddress}`);
 
+    // Prepare token options with contract address for strategy execution
+    const tokenOptions: ITokenOptions = {
+      ...options,
+      contractAddress: tokenAddress,
+    };
+
     // If a strategy is provided, use it to execute token purchases
     if (options.strategy) {
       const strategy = await this.createStrategy(options.strategy);
       try {
-        await strategy.execute(options);
+        // Initialize the strategy
+        await strategy.initialize(options.strategy.options);
+
+        // Execute the strategy
+        await strategy.execute(tokenOptions);
+
+        console.log("Token purchase strategy executed successfully");
+      } catch (error) {
+        console.error("Strategy execution failed:", error);
+        // Even if the strategy fails, we still return the token address
+        // since the token was created successfully
       } finally {
         // Always clean up strategy resources
         await strategy.cleanup();
       }
+    } else if (options.buy && options.buy.enabled) {
+      // If no strategy but buying is enabled, perform a simple buy
+      console.log("Executing direct token purchase...");
+      await this.buyTokens(tokenAddress, options.buy);
     }
 
     return tokenAddress;
@@ -134,9 +155,9 @@ export class EngineService {
         throw new Error(`Unsupported strategy type: ${strategyConfig.type}`);
     }
 
-    // Convert options to include required name field
-    const strategyOptions = {
-      name: `${strategyConfig.type} strategy`,
+    // Create strategy options with required name field
+    const strategyOptions: IStrategyOptions = {
+      name: strategyConfig.options.name || `${strategyConfig.type} strategy`,
       ...strategyConfig.options,
     };
 
@@ -152,9 +173,35 @@ export class EngineService {
    * @returns Token contract address
    */
   private async waitForTokenAddress(tokenId: string): Promise<string> {
-    // This is a placeholder - in reality we'd poll the API to get the token address
-    // once it's created, but the reference doesn't show that endpoint
-    return "0x0000000000000000000000000000000000000000";
+    const maxAttempts = 30; // Try for approximately 5 minutes
+    const delayMs = 10000; // 10 seconds between attempts
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(
+        `Waiting for token address... Attempt ${attempt + 1}/${maxAttempts}`
+      );
+
+      try {
+        // Get token details from API
+        const tokenDetails = await this.tokenService.getTokenDetails(tokenId);
+
+        if (tokenDetails && tokenDetails.tokenAddress) {
+          console.log(`Token address received: ${tokenDetails.tokenAddress}`);
+          return tokenDetails.tokenAddress;
+        }
+      } catch (error) {
+        console.warn(
+          `Error checking token address (will retry): ${error instanceof Error ? error.message : "Unknown error"}`
+        );
+      }
+
+      // Wait before next attempt
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    throw new Error(
+      `Timed out waiting for token address after ${maxAttempts} attempts`
+    );
   }
 
   /**

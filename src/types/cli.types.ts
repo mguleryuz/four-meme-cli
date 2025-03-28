@@ -12,8 +12,14 @@ export interface ITokenOptions {
   twitter?: string;
   website?: string;
   imagePath: string;
+  contractAddress?: string; // Token contract address once deployed
+  createArg?: string; // Encoded function call for token creation
+  buy?: IBuyOptions; // Buy options
 }
 
+/**
+ * Buy Options
+ */
 export interface IBuyOptions {
   enabled: boolean;
   buyerWallets: string[];
@@ -21,7 +27,19 @@ export interface IBuyOptions {
   maxGasPrice?: string;
 }
 
+/**
+ * Strategy configuration
+ */
+export interface IStrategyConfig {
+  type: string;
+  options: IStrategyOptionsConfig;
+}
+
+/**
+ * Strategy options configuration
+ */
 export interface IStrategyOptionsConfig {
+  name?: string;
   // Bundle options
   executeAllAtOnce?: boolean;
 
@@ -36,11 +54,6 @@ export interface IStrategyOptionsConfig {
 
   // Common options
   gasMultiplier?: number;
-}
-
-export interface IStrategyConfig {
-  type: string;
-  options: IStrategyOptionsConfig;
 }
 
 export interface ICreateTokenOptions extends ITokenOptions {

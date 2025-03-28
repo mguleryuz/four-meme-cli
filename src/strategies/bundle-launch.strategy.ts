@@ -8,6 +8,8 @@ import {
 } from "../types";
 import { WalletCoordinatorService } from "../blockchain/wallet-coordinator.service";
 import { envConfig } from "../config";
+import { BLOCKCHAIN_CONSTANTS } from "../config/constants";
+import { parseEther } from "viem";
 
 /**
  * Bundle Launch Strategy
@@ -70,54 +72,111 @@ export class BundleLaunchStrategy implements ILaunchStrategy {
         message: "Preparing for bundle launch...",
       };
 
-      // TODO: Implement the actual token creation and purchase flow
-      // This is a placeholder for the actual implementation
+      // Get primary wallet address for token creation
+      const walletAddresses = this.walletCoordinator.getWalletAddresses();
+      if (walletAddresses.length === 0) {
+        throw new Error("No wallets available for token creation");
+      }
+
+      const primaryWalletAddress = walletAddresses[0];
 
       // 1. Create the token contract transaction
-      // const createTokenTx: TransactionRequest = {
-      //   to: envConfig.factoryAddress,
-      //   data: '0x...',
-      //   value: BigInt(parseFloat(BLOCKCHAIN_CONSTANTS.CREATE_TOKEN_FEE) * 1e18)
-      // };
+      const createTokenTx: TransactionRequest = {
+        to: envConfig.factoryAddress,
+        data: tokenOptions.createArg, // This should contain the encoded function call
+        value: parseEther(BLOCKCHAIN_CONSTANTS.CREATE_TOKEN_FEE),
+      };
 
-      // 2. Prepare purchase transactions for all wallets
-      // const purchaseTxs: TransactionRequest[] = [];
-      // const walletAddresses = this.walletCoordinator.getWalletAddresses();
+      // Update status
+      this.status = {
+        stage: "executing",
+        progress: 30,
+        message: "Creating token contract...",
+      };
 
-      // for (const address of walletAddresses) {
-      //   const walletInfo = this.walletCoordinator.getWalletInfo(address);
-      //   if (walletInfo && walletInfo.isActive) {
-      //     purchaseTxs.push({
-      //       to: tokenOptions.contractAddress, // This would be set after creation
-      //       value: BigInt(parseFloat(tokenOptions.buy.buyAmount) * 1e18)
-      //     });
-      //   }
-      // }
+      // 2. Execute the token creation transaction
+      const createTokenHash = await this.walletCoordinator.executeTransaction(
+        primaryWalletAddress,
+        createTokenTx,
+        {
+          gasMultiplier: this.options.gasMultiplier,
+          maxRetries: this.options.maxRetries,
+          confirmations: this.options.confirmations,
+          priority: "high",
+        }
+      );
 
-      // 3. Execute the token creation
-      // const tokenAddress = '0x...'; // Result from creation
+      // Wait for transaction confirmation
+      const receipt = await this.walletCoordinator.waitForConfirmation(
+        createTokenHash,
+        this.options.confirmations
+      );
 
-      // 4. Update the purchase transactions with the token address
-      // for (const tx of purchaseTxs) {
-      //   tx.to = tokenAddress;
-      // }
+      if (!receipt || receipt.status !== "success") {
+        throw new Error(
+          `Token creation failed. Transaction hash: ${createTokenHash}`
+        );
+      }
 
-      // 5. Execute all purchases at once
-      // const hashes = await this.walletCoordinator.executeBatchTransactions(
-      //   walletAddresses,
-      //   purchaseTxs,
-      //   {
-      //     gasMultiplier: this.options.gasMultiplier,
-      //     maxRetries: this.options.maxRetries,
-      //     confirmations: this.options.confirmations,
-      //     priority: 'high'
-      //   }
-      // );
+      // Extract token address from receipt or use the one provided
+      const tokenAddress =
+        receipt.contractAddress || tokenOptions.contractAddress;
 
-      // Simulate success for now
-      const tokenAddress = "0x0000000000000000000000000000000000000000";
+      if (!tokenAddress) {
+        throw new Error("Could not determine token contract address");
+      }
 
-      // Update status to completed
+      // Update status
+      this.status = {
+        stage: "executing",
+        progress: 50,
+        message: `Token created at ${tokenAddress}. Preparing purchases...`,
+      };
+
+      // 3. Prepare purchase transactions for all wallets
+      const purchaseTxs: TransactionRequest[] = [];
+      const purchaseWalletAddresses: string[] = [];
+
+      for (const address of walletAddresses) {
+        const walletInfo = this.walletCoordinator.getWalletInfo(address);
+        if (walletInfo && walletInfo.isActive) {
+          purchaseTxs.push({
+            to: tokenAddress,
+            value: parseEther(tokenOptions.buy.buyAmount),
+          });
+          purchaseWalletAddresses.push(address);
+        }
+      }
+
+      if (purchaseTxs.length === 0) {
+        this.status = {
+          stage: "completed",
+          progress: 100,
+          message: `Token created successfully at ${tokenAddress}, but no wallets available for purchasing`,
+        };
+        return tokenAddress;
+      }
+
+      // Update status
+      this.status = {
+        stage: "executing",
+        progress: 70,
+        message: `Executing ${purchaseTxs.length} purchases...`,
+      };
+
+      // 4. Execute all purchases at once
+      const hashes = await this.walletCoordinator.executeBatchTransactions(
+        purchaseWalletAddresses,
+        purchaseTxs,
+        {
+          gasMultiplier: this.options.gasMultiplier,
+          maxRetries: this.options.maxRetries,
+          confirmations: this.options.confirmations,
+          priority: "high",
+        }
+      );
+
+      // Update status
       this.status = {
         stage: "completed",
         progress: 100,

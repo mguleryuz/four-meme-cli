@@ -82,6 +82,27 @@ export interface ITokenCreateResponse {
   };
 }
 
+// Token details response
+export interface ITokenDetailsResponse {
+  code: number;
+  msg: string;
+  data: {
+    tokenId: string;
+    contractAddress?: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    totalSupply: string;
+    description?: string;
+    logoUrl?: string;
+    tgLink?: string;
+    xLink?: string;
+    websiteLink?: string;
+    createdAt: string;
+    status: string;
+  };
+}
+
 export interface IApiHeaders {
   [key: string]: string;
 }

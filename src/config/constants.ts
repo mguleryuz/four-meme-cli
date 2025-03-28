@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   USER_INFO: `${API_BASE_URL}/private/user/info`,
   TOKEN_UPLOAD: `${API_BASE_URL}/private/token/upload`,
   TOKEN_CREATE: `${API_BASE_URL}/private/token/create`,
+  TOKEN_DETAILS: `${API_BASE_URL}/private/token/details`,
 };
 
 export const BLOCKCHAIN_CONSTANTS = {
