@@ -14,6 +14,7 @@ export interface ITokenOptions {
   imagePath: string;
   contractAddress?: string; // Token contract address once deployed
   createArg?: string; // Encoded function call for token creation
+  signature?: string; // Signature for contract creation
   buy?: IBuyOptions; // Buy options
 }
 

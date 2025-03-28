@@ -298,8 +298,7 @@ export class CreateTokenCommand {
       twitter: cmdOptions.twitter,
       website: cmdOptions.website,
       imagePath: cmdOptions.image || answers.imagePath,
-      // TEMPORARY FIX: Providing a dummy createArg to avoid empty data error
-      createArg: "0x123456",
+      // The createArg will come from the API response
       buy: {
         enabled:
           cmdOptions.buy !== undefined ? cmdOptions.buy : answers.buyEnabled,
@@ -351,71 +350,16 @@ export class CreateTokenCommand {
     const spinner = ora("Initializing...").start();
 
     try {
-      // Create wallet coordinator
-      const walletCoordinator = new WalletCoordinatorService(
-        envConfig.bscRpcUrl
-      );
+      // Create engine service for token creation
+      const engineService = new EngineService();
 
-      // Create strategy factory
-      const strategyFactory = new StrategyFactoryService(walletCoordinator);
+      // Initialize the engine
+      spinner.text = "Authenticating with four.meme...";
+      await engineService.initialize();
 
-      // Initialize wallet coordinator with private keys from env
-      spinner.text = "Setting up wallets...";
-      if (envConfig.primaryWallet.privateKey) {
-        await walletCoordinator.addWallet(
-          envConfig.primaryWallet.privateKey,
-          "Primary"
-        );
-      }
-
-      // Add buyer wallets if needed
-      if (options.buy.enabled && envConfig.buyerWallets.length > 0) {
-        const buyerKeys = envConfig.buyerWallets.map((w) => w.privateKey);
-        const buyerLabels = envConfig.buyerWallets.map(
-          (_, i) => `Buyer ${i + 1}`
-        );
-        await walletCoordinator.addWallets(buyerKeys, buyerLabels);
-      }
-
-      // Create and initialize the appropriate strategy
-      spinner.text = `Initializing ${options.strategy.type} strategy...`;
-      let strategy;
-
-      switch (options.strategy.type) {
-        case StrategyType.BUNDLE:
-          strategy = await strategyFactory.createBundleStrategy({
-            executeAllAtOnce: true,
-            gasMultiplier: options.strategy.options.gasMultiplier,
-          });
-          break;
-
-        case StrategyType.STAGGERED:
-          strategy = await strategyFactory.createStaggeredStrategy({
-            delayBetweenTransactions:
-              options.strategy.options.delayBetweenTransactions,
-            waitForConfirmation: options.strategy.options.waitForConfirmation,
-            gasMultiplier: options.strategy.options.gasMultiplier,
-          });
-          break;
-
-        case StrategyType.ANTI_SNIPER:
-          strategy = await strategyFactory.createAntiSniperStrategy({
-            monitorDuration: options.strategy.options.monitorDuration,
-            triggerThreshold: options.strategy.options.triggerThreshold,
-            countermeasures: options.strategy.options.countermeasures as any,
-            gasMultiplier: options.strategy.options.gasMultiplier,
-          });
-          break;
-
-        default:
-          throw new Error(
-            `Unsupported strategy type: ${options.strategy.type}`
-          );
-      }
-
-      // Execute the strategy
-      spinner.text = `Executing ${options.strategy.type} strategy...`;
-      const tokenAddress = await strategy.execute(options);
+      // Create token
+      spinner.text = "Creating token on four.meme...";
+      const tokenAddress = await engineService.createToken(options);
 
       spinner.succeed(
         chalk.green(`Token created successfully: ${tokenAddress}`)

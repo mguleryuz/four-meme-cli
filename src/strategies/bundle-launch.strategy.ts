@@ -72,6 +72,17 @@ export class BundleLaunchStrategy implements ILaunchStrategy {
         message: "Preparing for bundle launch...",
       };
 
+      // Debug logging for token options
+      console.log(`Token contract address: ${tokenOptions.contractAddress}`);
+      console.log(`createArg available: ${!!tokenOptions.createArg}`);
+      console.log(`signature available: ${!!tokenOptions.signature}`);
+
+      if (!tokenOptions.createArg || !tokenOptions.signature) {
+        throw new Error(
+          "Missing required createArg or signature parameters - cannot proceed with token creation"
+        );
+      }
+
       // Get primary wallet address for token creation
       const walletAddresses = this.walletCoordinator.getWalletAddresses();
       if (walletAddresses.length === 0) {

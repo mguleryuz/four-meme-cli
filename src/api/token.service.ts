@@ -72,9 +72,12 @@ export class TokenService {
    * @param tokenData Token creation parameters
    * @returns Token ID and address
    */
-  async createToken(
-    tokenData: ITokenCreateRequest
-  ): Promise<{ tokenId: string; tokenAddress?: string }> {
+  async createToken(tokenData: ITokenCreateRequest): Promise<{
+    tokenId: string;
+    tokenAddress?: string;
+    createArg: string;
+    signature: string;
+  }> {
     if (!this.authService.getAccessToken()) {
       throw new Error("Not authenticated. Please login first.");
     }
@@ -90,7 +93,12 @@ export class TokenService {
         throw new Error(`Failed to create token: ${response.data.msg}`);
       }
 
-      return response.data.data;
+      return {
+        tokenId: response.data.data.tokenId.toString(),
+        tokenAddress: response.data.data.tokenAddress,
+        createArg: response.data.data.createArg,
+        signature: response.data.data.signature,
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Token creation failed: ${error.message}`);
@@ -106,14 +114,19 @@ export class TokenService {
    */
   async getTokenDetails(
     tokenId: string
-  ): Promise<{ tokenId: string; tokenAddress?: string }> {
+  ): Promise<{
+    tokenId: string;
+    tokenAddress?: string;
+    createArg?: string;
+    signature?: string;
+  }> {
     if (!this.authService.getAccessToken()) {
       throw new Error("Not authenticated. Please login first.");
     }
 
     try {
-      // Construct the token details URL with the tokenId
-      const url = `${API_ENDPOINTS.TOKEN_DETAILS}/${tokenId}`;
+      // Construct the token details URL with the tokenId as a query parameter
+      const url = `${API_ENDPOINTS.TOKEN_DETAILS}?id=${tokenId}`;
 
       const response = await axios.get<ITokenDetailsResponse>(url, {
         headers: this.authService.getHeaders(),
@@ -124,8 +137,10 @@ export class TokenService {
       }
 
       return {
-        tokenId: response.data.data.tokenId,
-        tokenAddress: response.data.data.contractAddress,
+        tokenId: response.data.data.id.toString(),
+        tokenAddress: response.data.data.address,
+        createArg: response.data.data.createArg,
+        signature: response.data.data.signature,
       };
     } catch (error) {
       if (error instanceof Error) {

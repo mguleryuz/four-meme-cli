@@ -60,6 +60,12 @@ export class EngineService {
     // Check wallet balance first to ensure we have enough funds
     const primaryWallet = this.walletService.getPrimaryWallet();
     const provider = primaryWallet.provider;
+
+    // Ensure provider exists
+    if (!provider) {
+      throw new Error("Wallet provider is null. Check wallet setup.");
+    }
+
     const walletAddress = await primaryWallet.getAddress();
     const balance = await provider.getBalance(walletAddress);
     const formattedBalance = parseFloat(balance.toString()) / 1e18; // Convert from wei to BNB
@@ -107,6 +113,18 @@ export class EngineService {
     const tokenResult = await this.tokenService.createToken(tokenRequest);
     console.log(`Token created with ID: ${tokenResult.tokenId}`);
 
+    // Debug what's in the token result
+    console.log("Token API response:");
+    console.log(`createArg available: ${!!tokenResult.createArg}`);
+    console.log(`signature available: ${!!tokenResult.signature}`);
+
+    // Extract createArg and signature from API response
+    if (!tokenResult.createArg || !tokenResult.signature) {
+      throw new Error(
+        "Missing required contract creation parameters from API response"
+      );
+    }
+
     // Wait for token address to be available
     let tokenAddress = tokenResult.tokenAddress;
     if (!tokenAddress) {
@@ -116,18 +134,30 @@ export class EngineService {
 
     console.log(`Token contract deployed at: ${tokenAddress}`);
 
-    // Prepare token options with contract address for strategy execution
+    // Prepare token options with contract address and creation parameters for strategy execution
     const tokenOptions: ITokenOptions = {
       ...options,
       contractAddress: tokenAddress,
+      createArg: tokenResult.createArg,
+      signature: tokenResult.signature,
     };
+
+    // Debug what's going into the strategy
+    console.log("Token options for strategy:");
+    console.log(`createArg present: ${!!tokenOptions.createArg}`);
+    console.log(`signature present: ${!!tokenOptions.signature}`);
 
     // If a strategy is provided, use it to execute token purchases
     if (options.strategy) {
       const strategy = await this.createStrategy(options.strategy);
       try {
         // Initialize the strategy
-        await strategy.initialize(options.strategy.options);
+        await strategy.initialize({
+          name:
+            options.strategy.options.name ||
+            `${options.strategy.type} strategy`,
+          ...options.strategy.options,
+        } as IStrategyOptions);
 
         // Execute the strategy
         await strategy.execute(tokenOptions);
@@ -179,7 +209,7 @@ export class EngineService {
     const strategyOptions: IStrategyOptions = {
       name: strategyConfig.options.name || `${strategyConfig.type} strategy`,
       ...strategyConfig.options,
-    };
+    } as IStrategyOptions; // Cast to work around TypeScript incompatibility
 
     return await this.strategyFactory.createStrategy(
       strategyType,

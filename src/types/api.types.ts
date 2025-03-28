@@ -77,8 +77,17 @@ export interface ITokenCreateResponse {
   code: number;
   msg: string;
   data: {
-    tokenId: string;
-    tokenAddress?: string;
+    tokenId: number;
+    totalAmount: string;
+    saleAmount: string;
+    template?: number;
+    launchTime?: number;
+    serverTime?: number;
+    createArg: string;
+    signature: string;
+    tamount?: string;
+    bamount?: string;
+    tokenAddress?: string; // For backward compatibility
   };
 }
 
@@ -87,19 +96,21 @@ export interface ITokenDetailsResponse {
   code: number;
   msg: string;
   data: {
-    tokenId: string;
-    contractAddress?: string;
+    id: number;
+    address?: string; // This is the contract address
+    image?: string;
     name: string;
+    shortName: string;
     symbol: string;
-    decimals: number;
-    totalSupply: string;
-    description?: string;
-    logoUrl?: string;
-    tgLink?: string;
-    xLink?: string;
-    websiteLink?: string;
-    createdAt: string;
+    descr?: string;
+    twitterUrl?: string;
+    totalAmount: string;
+    saleAmount: string;
+    launchTime?: number;
     status: string;
+    createArg?: string;
+    signature?: string;
+    // Many other fields that we don't need to map right now
   };
 }
 
