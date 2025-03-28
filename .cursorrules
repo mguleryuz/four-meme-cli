@@ -16,6 +16,7 @@
 - Group related functionality in modules
 - Keep module boundaries clean
 - Use index.ts for exporting public APIs
+- Organize launch strategies in separate modules
 
 ## API Integration Patterns
 
@@ -42,12 +43,37 @@
 - Consider gas price strategies for quick execution
 - Monitor transaction receipts for confirmation
 - Implement proper error handling for failed transactions
+- Use viem instead of ethers.js for all blockchain interactions
 
 ### Multiple Wallet Management
 
 - Load private keys from .env
 - Never log private keys or expose them in errors
 - Use descriptive names for wallet configurations
+- Support up to 39 wallets for bundling operations
+- Implement a wallet coordinator service for orchestration
+
+## Token Bundling Patterns
+
+### Launch Strategies
+
+- Bundle Launch: Create token and execute all purchases in rapid succession
+- Staggered Launch: Create token with immediate dev wallet buy, followed by timed purchases
+- Anti-Sniper Launch: Monitor for sniper activity and implement countermeasures
+
+### Transaction Coordination
+
+- Implement precise timing for transaction execution
+- Use block-based timing for optimal coordination
+- Add configurable delays between transactions
+- Monitor transaction confirmations before proceeding to next steps
+
+### Anti-Sniper Techniques
+
+- Detect and track external buyers
+- Implement protection measures against front-running
+- Use gas price strategies to ensure faster execution than snipers
+- Consider on-chain defenses for serious protection
 
 ## CLI Preferences
 
@@ -57,6 +83,7 @@
 - Show progress spinners for long-running operations
 - Provide clear error messages with potential solutions
 - Offer verbose mode for debugging
+- Add strategy selection interface for different launch patterns
 
 ### Image Handling
 
@@ -71,6 +98,7 @@
 - Mock API calls in tests
 - Use integration tests for key workflows
 - Maintain test data separate from production code
+- Test different launch strategies with minimal values
 
 ## Learned Patterns
 
@@ -86,3 +114,12 @@
 - Sequence of: auth → image upload → token parameters → contract deployment
 - Small delays may be needed between steps
 - Need to monitor for contract creation before purchase
+- Coordinated timing is essential for bundled launches
+
+### Token Bundling
+
+- Transaction sequencing affects success rate
+- Higher gas prices needed for competitive launches
+- Wallet count impacts overall performance
+- Network congestion can disrupt launch timing
+- Different strategies work better in different market conditions

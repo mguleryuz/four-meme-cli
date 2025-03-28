@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-We are at the initial implementation stage of the Four Meme CLI project. We have set up the project structure and implemented the core components for token creation and purchasing.
+We are implementing token bundling capabilities into the Four Meme CLI project. Our focus is creating a streamlined token creation and buying process that protects creators from snipers and front-running.
 
 ## Recent Changes
 
@@ -16,55 +16,79 @@ We are at the initial implementation stage of the Four Meme CLI project. We have
 
 - Project structure is established
 - Basic CLI command interface is working
-- Core components are implemented but need testing with real credentials
+- Core components are implemented but need refinement for bundling
 
 ## Active Decisions
 
+### Token Bundling Strategy
+
+1. **Concept Definition**: Token bundling refers to coordinating token creation and immediate purchase actions across multiple wallets to secure initial liquidity and prevent sniping.
+
+2. **Core Components**:
+
+   - **Multi-wallet Management**: Handle numerous wallets simultaneously
+   - **Coordinated Transactions**: Execute buys across wallets with precise timing
+   - **Launch Strategies**: Implement different approaches for token launch and purchase
+   - **Anti-Sniper Protection**: Prevent front-running and sniping by coordinating token creation and purchases
+
+3. **Implementation Approach**:
+   - Use `viem` instead of `ethers.js` for blockchain interactions
+   - Focus on coordinated transaction timing for the POC
+   - Implement multiple buying strategies (bundle, stagger, etc.)
+   - Consider basic token distribution capabilities
+
 ### Architecture Decisions
 
-1. **CLI Framework**: Selected Commander for command-line parsing with Figlet for UI banners
-2. **Image Handling**: Will use Sharp for image processing when needed
-3. **Authentication Flow**: Implemented SIWE (Sign-in with Ethereum) using ethers.js signatures
-4. **Development Mode**: Added development mode for testing without real private keys
+1. **Blockchain Library**: Migrate from ethers.js to viem for better performance and compatibility
+2. **Launch Strategies**: Implement multiple token launch patterns:
+   - Bundle Launch: Create token and execute all buys in rapid succession
+   - Staggered Launch: Create token with immediate dev wallet buy, followed by timed purchases
+   - Anti-Sniper Launch: Setup monitoring to detect and counter sniping attempts
+3. **Wallet Orchestration**: Implement a coordinator service to manage transaction sequencing
 
-### Implementation Priorities
+## Implementation Priorities
 
-1. **Testing with Real Credentials**: First priority to verify the API integration
-2. **Improve Error Handling**: Enhance robustness and user feedback
-3. **Contract Monitoring**: Implement better contract deployment monitoring
-4. **Purchase Strategies**: Fine-tune the purchase timing and wallet coordination
+1. **Migrate to viem**: Replace ethers.js with viem for all blockchain interactions
+2. **Enhanced Wallet Management**: Support larger number of wallets (up to 39)
+3. **Launch Strategy Implementation**: Create different token launch strategies
+4. **Transaction Coordination**: Implement precise timing for transaction execution
+5. **Monitoring & Analytics**: Add capabilities to track launch performance
 
 ## Next Steps
 
 ### Immediate Tasks
 
-1. Test the CLI with real credentials
-2. Implement better error handling with retries
-3. Add logging for troubleshooting
-4. Implement contract monitoring for token deployment
+1. Refactor blockchain services to use viem instead of ethers.js
+2. Implement a wallet coordinator service for multi-wallet management
+3. Create launch strategy modules for different buying patterns
+4. Add transaction timing and sequencing capabilities
+5. Implement token contract monitoring for deployment confirmation
 
 ### Short-term Goals
 
-1. Complete testing with real token creation
-2. Add support for configuration files
-3. Improve the UI with better progress indicators
-4. Add support for image compression
+1. Create a more robust wallet management system
+2. Implement multiple launch strategies
+3. Add transaction monitoring and validation
+4. Create a token distribution capability
 
 ### Medium-term Goals
 
-1. Implement more advanced purchase strategies
-2. Add support for token liquidity management
-3. Create a command for token sniping
+1. Explore smart contract implementation for bundled transactions
+2. Add more sophisticated anti-sniper strategies
+3. Implement advanced monitoring and analytics
+4. Create a more intuitive UI for strategy selection
 
 ## Open Questions
 
-1. What is the best way to monitor for successful token contract deployment?
-2. What are the optimal gas settings for quick token purchases post-deployment?
-3. How to coordinate multiple wallet purchases most effectively?
-4. What are the best strategies to avoid failed transactions?
+1. What are the optimal delay times between transactions to avoid detection?
+2. How many wallets can realistically be managed without performance issues?
+3. What parameters determine the best launch strategy for a given token?
+4. How can we best detect and counter sniping attempts?
+5. Should we implement a smart contract for bundled transactions in the future?
 
 ## Resources
 
 - four-meme-ref.js: Reference file for API and contract interaction
-- Ethers.js documentation for blockchain interactions
+- Token bundling descriptions from similar projects
+- viem documentation for blockchain interactions
 - four.meme website for manual testing and verification
