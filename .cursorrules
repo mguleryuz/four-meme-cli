@@ -1,0 +1,88 @@
+# Four Meme CLI - Project Intelligence
+
+## Code Structure Guidelines
+
+### Naming Conventions
+
+- Use camelCase for variables, functions, and methods
+- Use PascalCase for classes, interfaces, and type aliases
+- Use UPPER_SNAKE_CASE for constants
+- Prefix interfaces with 'I' (e.g., ITokenConfig)
+- Prefix type aliases with 'T' (e.g., TTokenParams)
+
+### File Organization
+
+- Place interfaces and types in dedicated files
+- Group related functionality in modules
+- Keep module boundaries clean
+- Use index.ts for exporting public APIs
+
+## API Integration Patterns
+
+### Authentication Flow
+
+- Generate nonce first
+- Sign nonce with wallet
+- Submit signature to login endpoint
+- Store and use the returned authentication token in all subsequent requests
+- Track token expiry and refresh as needed
+
+### API Call Pattern
+
+- Always include proper headers (content-type, cookies, etc.)
+- Handle rate limiting with exponential backoff
+- Log API responses for debugging
+- Use typed response objects
+
+## Blockchain Integration
+
+### Transaction Handling
+
+- Always estimate gas before sending transactions
+- Consider gas price strategies for quick execution
+- Monitor transaction receipts for confirmation
+- Implement proper error handling for failed transactions
+
+### Multiple Wallet Management
+
+- Load private keys from .env
+- Never log private keys or expose them in errors
+- Use descriptive names for wallet configurations
+
+## CLI Preferences
+
+### User Experience
+
+- Use colorful terminal output for better readability
+- Show progress spinners for long-running operations
+- Provide clear error messages with potential solutions
+- Offer verbose mode for debugging
+
+### Image Handling
+
+- Support multiple image formats
+- Validate image dimensions before upload
+- Compress images as needed
+- Provide preview capability when possible
+
+## Testing Strategy
+
+- Unit test core business logic
+- Mock API calls in tests
+- Use integration tests for key workflows
+- Maintain test data separate from production code
+
+## Learned Patterns
+
+### four.meme API
+
+- API requires specific headers for authentication
+- Nonce generation is required before login
+- Cookies must be maintained between requests
+- May need to handle token refreshing
+
+### Token Creation
+
+- Sequence of: auth → image upload → token parameters → contract deployment
+- Small delays may be needed between steps
+- Need to monitor for contract creation before purchase
