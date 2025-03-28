@@ -18,6 +18,14 @@
 - Use index.ts for exporting public APIs
 - Organize launch strategies in separate modules
 
+### Type Safety Practices
+
+- Avoid using ts-ignore comments - use proper type definitions instead
+- For accessing private fields in tests, use Object.defineProperty
+- Use 'as unknown as' pattern for type assertions when necessary
+- Create proper mock types for globals like setTimeout
+- Provide explicit types for mock functions in tests
+
 ## API Integration Patterns
 
 ### Authentication Flow
@@ -99,6 +107,11 @@
 - Use integration tests for key workflows
 - Maintain test data separate from production code
 - Test different launch strategies with minimal values
+- Use proper mocking techniques for dependencies
+- Create testable class wrappers for dependency injection
+- Handle proper cleanup in tests
+- Set up mock services for better testability
+- Ensure proper error handling in test cases
 
 ## Learned Patterns
 
@@ -123,3 +136,11 @@
 - Wallet count impacts overall performance
 - Network congestion can disrupt launch timing
 - Different strategies work better in different market conditions
+
+### TypeScript Testing
+
+- For mocking setTimeout and other globals, use proper type casting
+- When testing classes with private fields, use Object.defineProperty to override them
+- Always initialize proper mock values for EngineService and strategy components
+- Use TestableEngineService pattern for dependency injection
+- Ensure that test setup properly mirrors the production code's architecture
