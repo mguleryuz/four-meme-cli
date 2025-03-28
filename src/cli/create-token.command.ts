@@ -38,7 +38,11 @@ export class CreateTokenCommand {
         "Token decimals",
         String(DEFAULT_TOKEN_PARAMS.decimals)
       )
-      .option("-t, --total-supply <totalSupply>", "Token total supply")
+      .option(
+        "-t, --total-supply <totalSupply>",
+        "Token total supply",
+        String(DEFAULT_TOKEN_PARAMS.totalSupply)
+      )
       .option(
         "--description <description>",
         "Token description",

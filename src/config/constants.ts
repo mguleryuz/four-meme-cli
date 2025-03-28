@@ -53,6 +53,7 @@ export const CLI_CONSTANTS = {
 export const DEFAULT_TOKEN_PARAMS = {
   decimals: 18,
   description: "Created with Four Meme CLI",
+  totalSupply: 1000000000,
 };
 
 export const VERIFY_TYPES = {
