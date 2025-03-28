@@ -42,6 +42,20 @@ describe("Launch Strategies", () => {
     walletCoordinator.executeTransaction = mock(() =>
       Promise.resolve("0xTxHash1")
     );
+
+    // Fix: Properly mock the waitForConfirmation method to return a valid receipt
+    walletCoordinator.waitForConfirmation = mock(() =>
+      Promise.resolve({
+        transactionHash: "0xTxHash1",
+        blockNumber: BigInt(12345),
+        blockHash: "0xBlockHash1",
+        status: "success" as "success" | "reverted",
+        from: "0xAddress1",
+        to: "0xTargetAddress",
+        contractAddress: "0xContractAddress1",
+        gasUsed: BigInt(100000),
+      })
+    );
   });
 
   afterEach(() => {
